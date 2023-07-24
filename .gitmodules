@@ -1,0 +1,3 @@
+[submodule "MCU/ESP32-DMX"]
+	path = MCU/ESP32-DMX
+	url = https://github.com/luksal/ESP32-DMX
