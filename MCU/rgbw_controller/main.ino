@@ -1,5 +1,6 @@
 #include <Arduino.h>
 #include <DmxSimple.h>
+#include "secrets.h"
 
 void setup(){
     pinMode(15, OUTPUT); //RED
@@ -15,11 +16,13 @@ void setup(){
     // Setting MAX485 to receive mode
     digitalWrite(14, HIGH); //DE
     digitalWrite(12, LOW);  //RE
-    
-
-
 
     // Wi-Fi Connection
+    Wifi.begin(WIFI_SSID, WIFI_PASSWORD);
+    while (Wifi.status() != WL_CONNECTED) {
+        delay(500);
+        Serial.print(".");
+    }
 
     // MQTT Connection
 

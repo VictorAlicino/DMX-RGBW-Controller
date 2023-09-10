@@ -35,3 +35,5 @@ __pycache__
 SECRETS/*
 cmake-build-debug
 build
+
+secrets.h
