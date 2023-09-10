@@ -5,6 +5,7 @@ import pyautogui
 import numpy as np
 import mss
 import cv2
+from PyDMX import *
 from color_extractor import ColorExtractor
 
 debug_ver: bool = False
@@ -12,14 +13,20 @@ debug_ver: bool = False
 
 def _main() -> int:
     CE = ColorExtractor()
+    dmx = PyDMX('COM5', Cnumber=14)
+    
+    # Define the region of the screen to capture
+    monitor = {"top": 0, "left": 0, "width": 1920, "height": 1080}
     while True:
         with mss.mss() as sct:
-            # Define the region of the screen to capture
-            monitor = {"top": 0, "left": 0, "width": 1920, "height": 1080}
             # Capture the screen region and convert it to a numpy array
             img = np.array(sct.grab(monitor))
 
             CE.update(img)
+            
+            dmx.data = [0, 255, CE.get_right_colour()[2], CE.get_right_colour()[1], CE.get_right_colour()[0],0,0,0,255, CE.get_left_colour()[2], CE.get_left_colour()[1], CE.get_left_colour()[0]]
+
+            dmx.send()
             print(f'Left: {CE.get_left_hex_colour()} '
                   f'Center: {CE.get_center_hex_colour()} '
                   f'Right: {CE.get_right_hex_colour()}')
@@ -45,6 +52,8 @@ def _debug_main() -> int:
     right_color_box = tk.Canvas(root, width=350, height=350)
     right_color_box.pack(side="right", padx=5, pady=5)
 
+    dmx = PyDMX('COM5', Cnumber=14)
+
     while True:
         for i in range(iterations):
             with mss.mss() as sct:
@@ -54,9 +63,13 @@ def _debug_main() -> int:
                 img = np.array(sct.grab(monitor))
 
                 CE.update(img)
-                print(f'Left: {CE.get_left_hex_colour()} | '
-                      f'Center: {CE.get_center_hex_colour()} | '
-                      f'Right: {CE.get_right_hex_colour()} | '
+                #print(f'Left: {CE.get_left_hex_colour()} | '
+                #      f'Center: {CE.get_center_hex_colour()} | '
+                #      f'Right: {CE.get_right_hex_colour()} | '
+                #      f'@{frequency:.2f}Hz')
+                print(f'Left: {CE.get_left_colour()} / {CE.left_luminance} | '
+                      f'Center: {CE.get_center_colour()} / {CE.center_luminance} | '
+                      f'Right: {CE.get_right_colour()} / {CE.right_luminance} | '
                       f'@{frequency:.2f}Hz')
                 left_color_box.delete("all")
                 left_color_box.create_rectangle(0, 0, 350, 350,
@@ -75,6 +88,20 @@ def _debug_main() -> int:
                                                  fill=f"#{CE.get_right_colour()[2]:02x}"
                                                       f"{CE.get_right_colour()[1]:02x}"
                                                       f"{CE.get_right_colour()[0]:02x}")
+                
+                dmx.data = [0, 
+                            CE.right_luminance, 
+                            CE.get_right_colour()[2], 
+                            CE.get_right_colour()[1], 
+                            CE.get_right_colour()[0],
+                            0,0,0,
+                            CE.left_luminance, 
+                            CE.get_left_colour()[2], 
+                            CE.get_left_colour()[1], 
+                            CE.get_left_colour()[0]
+                            ]
+
+                dmx.send()
                 root.update()
 
         elapsed_time = time.monotonic() - start_time
